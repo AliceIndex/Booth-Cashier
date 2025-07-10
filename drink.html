@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドリンク | Booth Cashier</title>
+    <link rel="stylesheet" href="css/drink.css">
+</head>
+<body>
+    <a href="index.html" class="back-link fixed-back">戻る</a>
+    <a href="cashier.html" class="cashier-link">会計へ</a>
+    <h1>ドリンクメニュー</h1>
+    <div class="main-flex">
+        <div id="drink-list" class="tile-container"></div>
+        <div class="selected-list">
+            <h2>選択中のフード</h2>
+            <ul id="selected-food-list"></ul>
+            <h2>選択中のドリンク</h2>
+            <ul id="selected-drink-list"></ul>
+        </div>
+    </div>
+    <script src="script/select.js"></script>
+    <script src="script/drink.js"></script>
+    <script>
+        // 選択リスト表示用
+        function renderSelectedList() {
+            const food = (localStorage.getItem('selected_food') || '').trim().split('\n').slice(1);
+            const drink = (localStorage.getItem('selected_drink') || '').trim().split('\n').slice(1);
+            const foodList = document.getElementById('selected-food-list');
+            const drinkList = document.getElementById('selected-drink-list');
+            foodList.innerHTML = food.filter(Boolean).map((line, idx) => {
+                const [id, name, price] = line.split(',');
+                return `<li><button class="cancel-btn" onclick="cancelSelected('food',${idx})" title="キャンセル">×</button> ${name}（￥${price}）</li>`;
+            }).join('');
+            drinkList.innerHTML = drink.filter(Boolean).map((line, idx) => {
+                const [id, name, option, price] = line.split(',');
+                return `<li><button class="cancel-btn" onclick="cancelSelected('drink',${idx})" title="キャンセル">×</button> ${name}${option && option !== 'なし' ? '（' + option + '）' : ''}（￥${price}）</li>`;
+            }).join('');
+        }
+        function cancelSelected(type, idx) {
+            const key = `selected_${type}`;
+            let lines = (localStorage.getItem(key) || '').trim().split('\n');
+            if (lines.length <= 1) return; // ヘッダーのみ
+            lines.splice(idx + 1, 1); // +1はヘッダー分
+            localStorage.setItem(key, lines.join('\n') + (lines.length > 1 ? '\n' : ''));
+            renderSelectedList();
+        }
+        renderSelectedList();
+        window.renderSelectedList = renderSelectedList;
+        window.cancelSelected = cancelSelected;
+    </script>
+</body>
+</html>
