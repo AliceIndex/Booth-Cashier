@@ -20,10 +20,14 @@
                 <label for="received-amount">受取額</label>
                 <input type="text" id="received-amount" readonly value="">
             </div>
-            <div class="numpad" id="numpad">
-                <!-- テンキーはJSで生成 -->
+            <div class="numpad-row">
+                <div class="numpad" id="numpad">
+                    <!-- テンキーはJSで生成 -->
+                </div>
+                <div class="calc-side">
+                    <button id="calc-btn" class="calc-btn tall" type="button">現計</button>
+                </div>
             </div>
-            <button id="calc-btn" class="calc-btn">現計</button>
             <div class="change-block">
                 <span>お釣り: </span><span id="change-amount">￥0</span>
             </div>

@@ -1,16 +1,95 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Booth Cashier</title>
-    <link rel="stylesheet" href="css/default.css">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        /* 追加レイアウト調整 */
+        body { margin: 0; font-family: sans-serif; }
+        .site-header { text-align: center; padding: 20px 0; }
+        .main-flex { display: flex; gap: 24px; padding: 16px; align-items: flex-start; }
+        .item-list-section { flex: 1; min-width: 320px; }
+        .tile-container { display: flex; flex-wrap: wrap; gap: 12px; }
+        .tile { width: calc(33.333% - 8px); min-width: 120px; cursor: pointer; }
+        .selected-list { width: 320px; }
+        .cashier-link { position: fixed; top: 16px; right: 24px; z-index: 100; text-decoration: none; color: #fff; background:#0078d4; padding:8px 16px; border-radius:6px; }
+        @media (max-width:900px) {
+            .main-flex { flex-direction: column; }
+            .tile { width: calc(50% - 8px); }
+            .selected-list { width: auto; }
+        }
+    </style>
 </head>
 <body>
-    <div class="button-row">
-        <a href="drink.html" class="button-link"><span>ドリンク</span></a>
-        <a href="food.html" class="button-link"><span>フード</span></a>
-    </div>
-    <a href="cashier.html" class="go-to-cashier">会計へ</a>
+    <a href="cashier.html" class="cashier-link">会計へ</a>
+
+    <header class="site-header">
+        <h1>Booth Cashier</h1>
+        <p>商品をクリックして選択してください</p>
+    </header>
+
+    <main class="main-flex">
+        <section id="item-section" class="item-list-section">
+            <h2>商品一覧</h2>
+            <div id="item-list" class="tile-container"></div>
+        </section>
+
+        <aside class="selected-list">
+            <h2>選択中の商品</h2>
+            <h3>フード</h3>
+            <ul id="selected-food-list"></ul>
+            <h3>ドリンク</h3>
+            <ul id="selected-drink-list"></ul>
+            <div style="margin-top:12px;">
+                <button id="clear-selected" class="calc-btn" type="button">選択をクリア</button>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script/select.js"></script>
+    <script src="script/contents.js"></script>
+
+    <script>
+        // contents.js と連携する選択リスト描画・キャンセル関数
+        function renderSelectedList() {
+            const food = (localStorage.getItem('selected_food') || '').trim().split('\n').slice(1).filter(Boolean);
+            const drink = (localStorage.getItem('selected_drink') || '').trim().split('\n').slice(1).filter(Boolean);
+            const foodList = document.getElementById('selected-food-list');
+            const drinkList = document.getElementById('selected-drink-list');
+
+            foodList.innerHTML = food.map((line, idx) => {
+                const [id, name, price] = line.split(',');
+                return `<li><button class="cancel-btn" onclick="cancelSelected('food',${idx})" title="キャンセル">×</button> ${name}（￥${price}）</li>`;
+            }).join('') || '<li>商品が選択されていません</li>';
+
+            drinkList.innerHTML = drink.map((line, idx) => {
+                const [id, name, option, price] = line.split(',');
+                return `<li><button class="cancel-btn" onclick="cancelSelected('drink',${idx})" title="キャンセル">×</button> ${name}${option && option !== 'なし' ? '（' + option + '）' : ''}（￥${price}）</li>`;
+            }).join('') || '<li>商品が選択されていません</li>';
+        }
+
+        // cancelSelected は contents.js が未定義ならここで実装される（上書きしない）
+        window.cancelSelected = window.cancelSelected || function (type, idx) {
+            const key = `selected_${type}`;
+            let lines = (localStorage.getItem(key) || '').trim().split('\n');
+            if (lines.length <= 1) return;
+            lines.splice(idx + 1, 1);
+            localStorage.setItem(key, lines.join('\n') + (lines.length > 1 ? '\n' : ''));
+            renderSelectedList();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSelectedList();
+            document.getElementById('clear-selected').addEventListener('click', () => {
+                localStorage.removeItem('selected_food');
+                localStorage.removeItem('selected_drink');
+                renderSelectedList();
+            });
+            // contents.jsが描画したタイル群をロード完了後にまとめる必要があればcontents.js側で処理済み
+        });
+        window.renderSelectedList = renderSelectedList;
+    </script>
 </body>
 </html>

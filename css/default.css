@@ -3,7 +3,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 100dvh; /* 変更: 100vh -> 100dvh */
     margin: 0;
     position: relative;
 }

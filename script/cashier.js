@@ -53,12 +53,20 @@ function setupNumpad() {
     });
 }
 
-// 購入履歴をローカルストレージに保存
+// 購入履歴をローカルストレージに保存（取引番号を追加）
 function savePurchaseLog(food, drink, total, received, change) {
     const now = new Date();
     const timestamp = now.toLocaleString('ja-JP');
+
+    // 取引番号の取得（0001 から）
+    const counterKey = 'purchase_counter';
+    let counter = Number(localStorage.getItem(counterKey) || '1');
+    if (!Number.isFinite(counter) || counter < 1) counter = 1;
+    const txNo = String(counter).padStart(4, '0');
+
     let log = localStorage.getItem('purchase_log') || '';
-    let logEntry = `日時: ${timestamp}\n`;
+    let logEntry = `取引番号: ${txNo}\n`;
+    logEntry += `日時: ${timestamp}\n`;
     if (food.length > 0) {
         logEntry += 'フード:\n';
         food.forEach(line => {
@@ -76,6 +84,9 @@ function savePurchaseLog(food, drink, total, received, change) {
     logEntry += `合計: ￥${total}\n受取額: ￥${received}\nお釣り: ￥${change}\n---\n`;
     log += logEntry;
     localStorage.setItem('purchase_log', log);
+
+    // カウンターをインクリメントして保存
+    localStorage.setItem(counterKey, String(counter + 1));
 }
 
 function calcResult() {
@@ -88,18 +99,23 @@ function calcResult() {
     const drink = (localStorage.getItem('selected_drink') || '').trim().split('\n').slice(1).filter(Boolean);
     if (received === 0) {
         result.textContent = '受取額を入力してください。';
+        // お釣り表示も明示的に更新
+        document.getElementById('change-amount').textContent = '￥0';
     } else if (change < 0) {
         result.textContent = '受取額が不足しています。';
+        document.getElementById('change-amount').textContent = '￥0';
     } else {
         result.textContent = `お預かり: ￥${received}　お釣り: ￥${change}`;
-        // ログ保存
+        // お釣り表示を明示的に更新（現計押下で必ず表示されるようにする）
+        document.getElementById('change-amount').textContent = `￥${change}`;
+        // ログ保存（取引番号を含む）
         savePurchaseLog(food, drink, total, received, change);
         // 受取額が合計金額以上ならリストを消去し、入力金額もクリア
         localStorage.removeItem('selected_food');
         localStorage.removeItem('selected_drink');
         receivedInput.value = '';
         renderCashierList();
-        updateChange();
+        // updateChange は呼ばない（既に表示を更新済み）
     }
 }
 
@@ -124,7 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNumpad();
     document.getElementById('received-amount').value = '';
     document.getElementById('received-amount').addEventListener('input', updateChange);
-    document.getElementById('calc-btn').addEventListener('click', calcResult);
+    const calcBtn = document.getElementById('calc-btn');
+    if (calcBtn) calcBtn.addEventListener('click', calcResult);
 
     const panel = document.querySelector('.cashier-panel');
     if (panel) {
