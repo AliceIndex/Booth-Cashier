@@ -5,8 +5,28 @@ body {
     padding: 0;
     min-height: 100dvh; /* 変更: 100vh -> 100dvh */
 }
-h1 {
+header {
     margin-top: 4.8dvh; /* 変更: 48px -> dvh ベース */
+}
+
+.back-link {
+    position: fixed;
+    top: 24px;
+    left: 32px;
+    text-decoration: none;
+    color: #fff;
+    background: #a000b8;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+    display: center;
+}
+.back-link:hover {
+    background: #7a008a;
+}
+h1 {
+    margin: 0;
     color: #a000b8;
     text-align: center;
 }
@@ -17,8 +37,24 @@ h1 {
     margin-top: 2.4dvh; /* 変更: px -> dvh */
     gap: 4.8dvw; /* 変更: gap を dvw ベースに(以前 48px 相当) */
 }
+.left-list{
+    display: flex;
+    flex-direction: column;
+    gap: 2.4dvh; /* 変更: px -> dvh */
+}
 /* center-list の最小幅を dvw に */
-.center-list.left-list {
+.left-list.upper-list {
+    background: #fff;
+    border: 1px solid #a000b8;
+    border-radius: 12px;
+    padding: 32px 40px;
+    min-width: 28dvw; /* 変更: px -> dvw */
+    max-width: 40dvw; /* 変更: px -> dvw */
+    box-shadow: 0 2px 8px rgba(160,0,184,0.08);
+    text-align: center;
+}
+/* center-list の最小幅を dvw に */
+.left-list.lower-list {
     background: #fff;
     border: 1px solid #a000b8;
     border-radius: 12px;
@@ -115,25 +151,8 @@ h1 {
     text-align: center;
     box-shadow: 0 2px 8px rgba(160,0,184,0.06);
 }
-.back-link {
-    margin-top: 32px;
-    text-decoration: none;
-    color: #fff;
-    background: #a000b8;
-    padding: 12px 32px;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    transition: background 0.2s;
-    display: inline-block;
-}
-.back-link:hover {
-    background: #7a008a;
-}
-.fixed-back {
-    position: fixed;
-    top: 24px;
-    left: 32px;
-}
+
+
 .calc-btn {
     width: 100%;
     margin: 10px 0 0 0;

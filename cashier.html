@@ -7,33 +7,43 @@
     <link rel="stylesheet" href="css/cashier.css">
 </head>
 <body>
-    <a href="index.html" class="back-link fixed-back">戻る</a>
-    <h1>会計ページ</h1>
-    <div class="cashier-flex">
-        <div class="center-list left-list">
-            <h2>選択中の商品</h2>
-            <ul id="selected-list"></ul>
-            <div class="total">合計金額: <span id="total-price">￥0</span></div>
-        </div>
-        <div class="cashier-panel">
-            <div class="input-block">
-                <label for="received-amount">受取額</label>
-                <input type="text" id="received-amount" readonly value="">
-            </div>
-            <div class="numpad-row">
-                <div class="numpad" id="numpad">
-                    <!-- テンキーはJSで生成 -->
+    <header>
+        <a href="index.html" class="back-link">戻る</a>
+        <h1>会計ページ</h1>
+    </header>
+    <main>
+        <div class="cashier-flex">
+            <div class="left-list">
+                <div class="left-list upper-list">
+                    <h2>選択中の商品</h2>
+                    <ul id="selected-list"></ul>
+                    <div class="total">合計金額: <span id="total-price">￥0</span></div>
                 </div>
-                <div class="calc-side">
-                    <button id="calc-btn" class="calc-btn tall" type="button">現計</button>
+                <div class="left-list lower-list">
+                    <div id="saved-transactions"></div>
+                    </div>  
+            </div>
+            <div class="cashier-panel">
+                <div class="input-block">
+                    <label for="received-amount">受取額</label>
+                    <input type="text" id="received-amount" readonly value="">
                 </div>
+                <div class="numpad-row">
+                    <div class="numpad" id="numpad">
+                        <!-- テンキーはJSで生成 -->
+                    </div>
+                    <div class="calc-side">
+                        <button id="calc-btn" class="calc-btn tall" type="button">現計</button>
+                    </div>
+                </div>
+                <div class="change-block">
+                    <span>お釣り: </span><span id="change-amount">￥0</span>
+                </div>
+                <div id="result-message" class="result-message"></div>
             </div>
-            <div class="change-block">
-                <span>お釣り: </span><span id="change-amount">￥0</span>
-            </div>
-            <div id="result-message" class="result-message"></div>
         </div>
-    </div>
-    <script src="script/cashier.js"></script>
+        <script src="script/cashier.js"></script>
+    </main>
+    
 </body>
 </html>
