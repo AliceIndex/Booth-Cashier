@@ -3,9 +3,25 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:exe": "node scripts/build-exe.js",
+    "build:dev": "node scripts/build-dev.js",
+    "build:installer": "node scripts/build-installer.js",
+    "build": "node scripts/build-installer.js"
+  },
+  "pkg": {
+    "scripts": [
+      "server.js"
+    ],
+    "assets": [
+      "*.html",
+      "css/**/*",
+      "script/**/*",
+      "data/contents.csv"
+    ]
   },
   "repository": {
     "type": "git",
@@ -22,6 +38,11 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "iconv-lite": "^0.7.0"
+    "iconv-lite": "^0.7.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.22.0",
+    "innosetup-compiler": "^6.3.1"
   }
 }

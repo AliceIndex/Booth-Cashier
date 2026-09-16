@@ -3,11 +3,19 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const iconv = require('iconv-lite'); // 追加：Shift_JIS エンコード用
+const os = require('os');
+const qrcode = require('qrcode');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ROOT = path.join(__dirname);
-const LOG_DIR = path.join(ROOT, 'log');
+
+// パス定義: 静的アセットは内蔵(STATIC_ROOT)、データ/ログは外部(DATA_ROOT)
+const STATIC_ROOT = __dirname;
+const DATA_ROOT = process.pkg ? path.dirname(process.execPath) : __dirname;
+const LOG_DIR = path.join(DATA_ROOT, 'log');
+const DATA_DIR = path.join(DATA_ROOT, 'data');
+
 // 定数（既存: MASTER_LOG を残しても良いが、以降はテキスト出力を行わない）
 const MASTER_LOG = path.join(LOG_DIR, 'purchase_log.txt');
 const MASTER_CSV = path.join(LOG_DIR, 'purchase_log.csv');
@@ -18,10 +26,10 @@ const TRANSACTIONS_DIR = path.join(LOG_DIR, 'transactions');
 // 日時を取得する関数
 function getCurrentDate() {
     const d = new Date();
-    const year=d.getFullYear();
-    const month=String(d.getMonth()+1).padStart(2,'0');
-    const date=String(d.getDate()).padStart(2,'0');
-    const CurrentDate = year+month+date;
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    const CurrentDate = year + month + date;
     return CurrentDate;
 }
 
@@ -29,8 +37,48 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));      // JSON 受信
 app.use(express.text({ type: '*/*', limit: '10mb' })); // プレーンテキスト受信
 
-// 静的ファイル配信
-app.use(express.static(ROOT));
+// 静的ファイル配信（内蔵アセット + 外部フォルダ）
+app.use(express.static(STATIC_ROOT));
+if (DATA_ROOT !== STATIC_ROOT) {
+    app.use(express.static(DATA_ROOT));
+}
+
+// pkg snapshot 仮想ファイルシステム用フォールバック
+app.use((req, res, next) => {
+    let reqPath = req.path;
+    if (reqPath === '/') reqPath = '/index.html';
+
+    const candidatePaths = [
+        path.join(STATIC_ROOT, reqPath),
+        path.join(DATA_ROOT, reqPath)
+    ];
+
+    for (const localFilePath of candidatePaths) {
+        try {
+            if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
+                const ext = path.extname(localFilePath).toLowerCase();
+                const mimeTypes = {
+                    '.html': 'text/html; charset=UTF-8',
+                    '.css': 'text/css; charset=UTF-8',
+                    '.js': 'application/javascript; charset=UTF-8',
+                    '.json': 'application/json; charset=UTF-8',
+                    '.png': 'image/png',
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.gif': 'image/gif',
+                    '.svg': 'image/svg+xml',
+                    '.ico': 'image/x-icon'
+                };
+                const contentType = mimeTypes[ext] || 'application/octet-stream';
+                res.setHeader('Content-Type', contentType);
+                return res.send(fs.readFileSync(localFilePath));
+            }
+        } catch (e) {
+            // 次の候補へ
+        }
+    }
+    next();
+});
 
 // 簡易APIキー検査（API_KEY が設定されている場合のみ要求）
 function requireApiKey(req, res, next) {
@@ -40,14 +88,28 @@ function requireApiKey(req, res, next) {
     next();
 }
 
-// logフォルダ作成
+// フォルダ作成
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+if (!fs.existsSync(TRANSACTIONS_DIR)) fs.mkdirSync(TRANSACTIONS_DIR, { recursive: true });
+
+// 初期 contents.csv のコピー（外部に存在しない場合）
+const externalCsvPath = path.join(DATA_DIR, 'contents.csv');
+const internalCsvPath = path.join(STATIC_ROOT, 'data', 'contents.csv');
+if (!fs.existsSync(externalCsvPath) && fs.existsSync(internalCsvPath)) {
+    try {
+        fs.copyFileSync(internalCsvPath, externalCsvPath);
+        console.log('Copied default contents.csv to:', externalCsvPath);
+    } catch (e) {
+        console.error('Failed to initialize contents.csv:', e);
+    }
+}
 
 // ユーティリティ: 日付文字列 YYYY-MM-DD_HHMMSS
 function timestampString() {
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
 // contents.csv マップ（商品名 -> { id, type, name, price }）
@@ -56,17 +118,20 @@ let contentsMapById = new Map();
 
 function loadContentsMap() {
     try {
-        const csvPath = path.join(ROOT, 'data', 'contents.csv');
+        let csvPath = path.join(DATA_DIR, 'contents.csv');
+        if (!fs.existsSync(csvPath)) {
+            csvPath = path.join(STATIC_ROOT, 'data', 'contents.csv');
+        }
         if (!fs.existsSync(csvPath)) return;
         const buf = fs.readFileSync(csvPath);
         // decode Shift_JIS (cp932)
         const text = iconv.decode(buf, 'shift_jis');
-        const lines = text.replace(/\r/g,'').split('\n').map(l => l.trim()).filter(Boolean);
+        const lines = text.replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean);
         if (lines.length <= 1) return;
         const headers = lines[0].split(',').map(h => h.trim());
-        const idx = {}; headers.forEach((h,i)=> idx[h] = i);
+        const idx = {}; headers.forEach((h, i) => idx[h] = i);
         for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g,'').trim());
+            const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
             const id = cols[idx['id']] || cols[idx['商品ID']] || cols[0] || '';
             const type = (cols[idx['type']] || cols[1] || '').toLowerCase();
             const name = cols[idx['商品名']] || cols[idx['name']] || cols[2] || '';
@@ -90,7 +155,7 @@ loadContentsMap();
 function ensureCsvHeader() {
     if (!fs.existsSync(MASTER_CSV)) {
         const header = [
-            '取引番号','日時','商品ID','種別','商品名','オプション','単価','数量','行合計','合計','受取額','お釣り'
+            '取引番号', '日時', '商品ID', '種別', '商品名', 'オプション', '単価', '数量', '行合計', '合計', '受取額', 'お釣り'
         ].join(',') + '\n';
         fs.writeFileSync(MASTER_CSV, iconv.encode(header, 'shift_jis'));
     }
@@ -98,7 +163,7 @@ function ensureCsvHeader() {
 
 // strict: contentsMapByName / contentsMapById を使って「実際に登録された商品」のみを保存する
 
-function normalizeName(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+function normalizeName(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
 
 // ブロック（1取引）からアイテム配列を抽出し、contents マップで補完・検証する
 function extractItemsFromBlock(lines) {
@@ -205,9 +270,9 @@ function parseTextLogToCsvRows(text) {
         lines.forEach(l => {
             if (l.startsWith('取引番号:')) txNo = l.replace('取引番号:', '').trim();
             if (l.startsWith('日時:')) datetime = l.replace('日時:', '').trim();
-            if (l.startsWith('合計:')) total = l.replace(/合計:\s*￥?/,'').trim();
-            if (l.startsWith('受取額:')) received = l.replace(/受取額:\s*￥?/,'').trim();
-            if (l.startsWith('お釣り:')) change = l.replace(/お釣り:\s*￥?/,'').trim();
+            if (l.startsWith('合計:')) total = l.replace(/合計:\s*￥?/, '').trim();
+            if (l.startsWith('受取額:')) received = l.replace(/受取額:\s*￥?/, '').trim();
+            if (l.startsWith('お釣り:')) change = l.replace(/お釣り:\s*￥?/, '').trim();
         });
 
         // items を抽出（contents マップで検証）
@@ -253,9 +318,9 @@ function parseTextLogToCsvRows(text) {
     //
     // 置換後:
 */
-    // payload は文字列（テキストログ）の場合
-    // textEntry をそのまま丸ごと保存せず、登録商品を含むブロックのみを集める
-    // 呼び出し元で csvRows を取得し、保存対象のテキストブロックは再構築して保存する
+// payload は文字列（テキストログ）の場合
+// textEntry をそのまま丸ごと保存せず、登録商品を含むブロックのみを集める
+// 呼び出し元で csvRows を取得し、保存対象のテキストブロックは再構築して保存する
 
 
 // POST /api/save-log の処理：テキスト受信時も、登録商品が一つも無ければ保存しないようにする。
@@ -285,7 +350,7 @@ app.post('/api/save-log', requireApiKey, (req, res) => {
                             option: it.option || '',
                             price: it.price != null ? String(it.price) : '',
                             qty: it.qty != null ? String(it.qty) : (it.quantity != null ? String(it.quantity) : '1'),
-                            lineTotal: ( (Number(it.price || 0) * Number(it.qty || 1)) || '' ),
+                            lineTotal: ((Number(it.price || 0) * Number(it.qty || 1)) || ''),
                             total: tx.total != null ? String(tx.total) : '',
                             received: tx.received != null ? String(tx.received) : '',
                             change: tx.change != null ? String(tx.change) : ''
@@ -344,7 +409,7 @@ app.post('/api/save-log', requireApiKey, (req, res) => {
             let d = new Date(datetimeStr);
             if (isNaN(d.getTime())) d = new Date();
             const pad = n => String(n).padStart(2, '0');
-            const dateDirName = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`; // yyyymmdd
+            const dateDirName = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`; // yyyymmdd
 
             const dayDir = path.join(TRANSACTIONS_DIR, dateDirName);
             if (!fs.existsSync(dayDir)) fs.mkdirSync(dayDir, { recursive: true });
@@ -379,7 +444,7 @@ app.post('/api/save-log', requireApiKey, (req, res) => {
                 });
             }
 
-            const total = rows[0] && rows[0].total ? rows[0].total : String(rows.reduce((s,r)=> s + Number(r.lineTotal||0),0));
+            const total = rows[0] && rows[0].total ? rows[0].total : String(rows.reduce((s, r) => s + Number(r.lineTotal || 0), 0));
             const received = rows[0] && rows[0].received ? rows[0].received : '';
             const change = rows[0] && rows[0].change ? rows[0].change : '';
             txt += `合計: ￥${total}\n`;
@@ -393,7 +458,7 @@ app.post('/api/save-log', requireApiKey, (req, res) => {
             }
             fs.writeFileSync(outPath, iconv.encode(txt, 'shift_jis'));
         });
-        
+
         console.log("Success : Save TransactionData from Client.")
         return res.json({ ok: true, written: { csv: MASTER_CSV, rows: csvRows.length, transactionsDir: TRANSACTIONS_DIR } });
     } catch (err) {
@@ -452,15 +517,119 @@ app.delete('/api/clear-logs', requireApiKey, (req, res) => {
     }
 });
 
+// ローカルIP取得関数
+function getLocalIpAddress() {
+    const interfaces = os.networkInterfaces();
+    const candidates = [];
+    for (const name of Object.keys(interfaces)) {
+        for (const net of interfaces[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                candidates.push(net.address);
+            }
+        }
+    }
+    const preferred = candidates.find(ip => ip.startsWith('192.168.')) ||
+        candidates.find(ip => ip.startsWith('10.')) ||
+        candidates.find(ip => ip.startsWith('172.')) ||
+        candidates[0] || 'localhost';
+    return preferred;
+}
+
+// サーバー情報（QRコード・IP）API
+app.get('/api/server-info', async (req, res) => {
+    try {
+        const ip = getLocalIpAddress();
+        const clientUrl = `http://${ip}:${PORT}`;
+        const portalUrl = `http://localhost:${PORT}/portal.html`;
+        const qrDataUrl = await qrcode.toDataURL(clientUrl, {
+            width: 280,
+            margin: 2,
+            color: { dark: '#0f172a', light: '#ffffff' }
+        });
+        res.json({
+            status: 'running',
+            port: PORT,
+            localIp: ip,
+            clientUrl,
+            portalUrl,
+            dataDir: DATA_DIR,
+            logDir: LOG_DIR,
+            qrDataUrl
+        });
+    } catch (err) {
+        console.error('server-info error', err);
+        res.status(500).json({ error: 'Failed to get server info' });
+    }
+});
+
+// データフォルダをエクスプローラーで開く API
+app.post('/api/open-data-folder', (req, res) => {
+    try {
+        const target = fs.existsSync(DATA_DIR) ? DATA_DIR : DATA_ROOT;
+        exec(`explorer.exe "${target}"`, (err) => {
+            if (err) console.error('Failed to open folder', err);
+        });
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('open-data-folder error', err);
+        res.status(500).json({ error: 'Failed to open folder' });
+    }
+});
+
+// サーバーシャットダウン API
+app.post('/api/shutdown', (req, res) => {
+    res.json({ ok: true, message: 'Server is shutting down...' });
+    setTimeout(() => {
+        console.log('Shutdown requested from portal. Exiting...');
+        process.exit(0);
+    }, 500);
+});
+
 // ルートフォールバック
 app.get('/', (req, res) => {
-    const indexPath = path.join(ROOT, 'index.html');
+    const indexPath = path.join(STATIC_ROOT, 'index.html');
     if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
     return res.send('Booth Cashier server running');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server listening on http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+    const ip = getLocalIpAddress();
+    console.log(`========================================`);
+    console.log(`Booth Cashier Server Started!`);
+    console.log(`- Portal (Main PC): http://localhost:${PORT}/portal.html`);
+    console.log(`- Client (iPad/Phone): http://${ip}:${PORT}/`);
+    console.log(`========================================`);
+
+    if (process.env.AUTO_OPEN !== 'false') {
+        const portalUrl = `http://localhost:${PORT}/portal.html`;
+        exec(`start "" "${portalUrl}"`, (err) => {
+            if (err) console.error('Failed to open browser:', err);
+        });
+    }
+});
+
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n[WARNING] ポート ${PORT} は既に使用されています！`);
+        console.error(`別の Booth Cashier（または他のアプリ）が既に起動している可能性があります。`);
+        console.error(`既存のサーバー画面（ポータル）を開きます: http://localhost:${PORT}/portal.html\n`);
+
+        exec(`start "" "http://localhost:${PORT}/portal.html"`);
+
+        // コンソールが即座に閉じて消えてしまうのを防ぐため、キー入力を待機
+        console.log('Enter キーを押すと終了します...');
+        const readline = require('readline').createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+        readline.question('', () => {
+            readline.close();
+            process.exit(1);
+        });
+    } else {
+        console.error('Server error:', err);
+        process.exit(1);
+    }
 });
 
 function readServerCounter() {
@@ -470,11 +639,11 @@ function readServerCounter() {
         const lines = s.split(/\r?\n/).filter(Boolean);
         if (!lines.length) return [getCurrentDate(), 9001];
         for (let i = 0; i < lines.length; i++) {
-            if(lines[i].split(" ").includes(getCurrentDate())){
+            if (lines[i].split(" ").includes(getCurrentDate())) {
                 const n = Number(lines[i].split(" ")[1]);
                 if (!isNaN(n) && n >= 9001 && n <= 9999) {
                     return [getCurrentDate(), n];
-                }else{
+                } else {
                     return [getCurrentDate(), 9001];
                 }
             }
@@ -492,15 +661,15 @@ function writeServerCounter(counter) {
         const lines = s.split(/\r?\n/).filter(Boolean);
         if (!lines.length) return;
         for (let i = 0; i < lines.length; i++) {
-            if(lines[i].split(" ").includes(getCurrentDate())){
+            if (lines[i].split(" ").includes(getCurrentDate())) {
                 const n = Number(lines[i].split(" ")[1]);
                 if (!isNaN(n) && n >= 9001 && n <= 9999) {
-                    if(n >= counter){
-                        lines[i] = getCurrentDate()+" "+String(n+1);
-                    }else{
-                        lines[i] = getCurrentDate()+" "+String(counter);
+                    if (n >= counter) {
+                        lines[i] = getCurrentDate() + " " + String(n + 1);
+                    } else {
+                        lines[i] = getCurrentDate() + " " + String(counter);
                     }
-                }else{
+                } else {
                     return;
                 }
             }
@@ -535,7 +704,7 @@ app.post('/api/update-counter', requireApiKey, (req, res) => {
         const n = Number(payload.counter);
         if (isNaN(n)) {
             return res.status(400).json({ error: 'Invalid counter value' });
-        }else{
+        } else {
             if (n < 9001 || n > 9999) {
                 return res.status(400).json({ error: 'Counter value out of range' });
             }
