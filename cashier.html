@@ -20,8 +20,11 @@
                     <div class="total">合計金額: <span id="total-price">￥0</span></div>
                 </div>
                 <div class="left-list lower-list">
-                    <div id="saved-transactions"></div>
-                    </div>  
+                    <section id="saved-transactions">
+                        <h3>未送信取引記録</h3>
+                        <div class="saved-list muted">ロード中...</div>
+                    </section>
+                </div>  
             </div>
             <div class="cashier-panel">
                 <div class="input-block">
@@ -40,10 +43,12 @@
                     <span>お釣り: </span><span id="change-amount">￥0</span>
                 </div>
                 <div id="result-message" class="result-message"></div>
+                <button id="btn-upload-server" class="calc-btn btn-server-save" type="button">購入履歴をサーバーに保存</button>
             </div>
         </div>
-        <script src="script/cashier.js"></script>
+        <script src="js/common.js"></script>
+        <script src="js/cart.js"></script>
+        <script src="js/cashier.js"></script>
     </main>
-    
 </body>
 </html>

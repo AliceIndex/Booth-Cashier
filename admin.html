@@ -33,9 +33,9 @@
 </section>
 
 <section class="summary" aria-label="サマリー">
-  <div class="card"><div class="muted">合計商品売上</div><div id="sum-items" style="font-weight:800;font-size:1.25rem">￥0</div></div>
-  <div class="card"><div class="muted">取引数</div><div id="count-tx" style="font-weight:800;font-size:1.25rem">0</div></div>
-  <div class="card"><div class="muted">商品数</div><div id="count-items" style="font-weight:800;font-size:1.25rem">0</div></div>
+  <div class="card"><div class="muted">合計商品売上</div><div id="sum-items" class="summary-value">￥0</div></div>
+  <div class="card"><div class="muted">取引数</div><div id="count-tx" class="summary-value">0</div></div>
+  <div class="card"><div class="muted">商品数</div><div id="count-items" class="summary-value">0</div></div>
 </section>
 
 <section>
@@ -50,12 +50,12 @@
   </table>
 </section>
 
-<section style="margin-top:12px">
+<section class="raw-log-section">
   <h3>生ログ（テキスト）</h3>
   <div id="raw-log">未読み込み</div>
 </section>
 
-<!-- 末尾: inline script を削除して外部読み込みに -->
-<script src="script/admin.js"></script>
+<script src="js/common.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

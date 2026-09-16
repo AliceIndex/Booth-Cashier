@@ -16,8 +16,6 @@ const DATA_ROOT = process.pkg ? path.dirname(process.execPath) : __dirname;
 const LOG_DIR = path.join(DATA_ROOT, 'log');
 const DATA_DIR = path.join(DATA_ROOT, 'data');
 
-// 定数（既存: MASTER_LOG を残しても良いが、以降はテキスト出力を行わない）
-const MASTER_LOG = path.join(LOG_DIR, 'purchase_log.txt');
 const MASTER_CSV = path.join(LOG_DIR, 'purchase_log.csv');
 const API_KEY = process.env.LOG_API_KEY || ''; // 必要なら環境変数で設定
 const COUNTER_FILE = path.join(LOG_DIR, 'purchase_counter.csv');
@@ -308,22 +306,7 @@ function parseTextLogToCsvRows(text) {
     return rows;
 }
 
-// POST /api/save-log の処理：テキスト受信時も、登録商品が一つも無ければ保存しないようにする。
-// 既存のハンドラ内のテキスト処理部分を以下のロジックに置き換えてください：
-
-/*
-    // 既存:
-    // textEntry = payload.trim();
-    // csvRows = parseTextLogToCsvRows(textEntry);
-    //
-    // 置換後:
-*/
-// payload は文字列（テキストログ）の場合
-// textEntry をそのまま丸ごと保存せず、登録商品を含むブロックのみを集める
-// 呼び出し元で csvRows を取得し、保存対象のテキストブロックは再構築して保存する
-
-
-// POST /api/save-log の処理：テキスト受信時も、登録商品が一つも無ければ保存しないようにする。
+// POST /api/save-log の処理：登録商品を含むブロックのみCSVと日別ファイルに保存する
 app.post('/api/save-log', requireApiKey, (req, res) => {
     try {
         const payload = (req.is('application/json')) ? req.body : (req.body || '').toString();
@@ -483,8 +466,8 @@ app.get('/api/logs', requireApiKey, (req, res) => {
     }
 });
 
-// GET /api/download-log: マスターのダウンロードは CSV のみ提供する
-app.get('/api/download-log', requireApiKey, (req, res) => {
+// CSVダウンロードハンドラ
+const handleDownloadCsv = (req, res) => {
     if (!fs.existsSync(MASTER_CSV)) return res.status(404).send('No csv');
     res.download(MASTER_CSV, 'purchase_log.csv', err => {
         if (err) {
@@ -492,18 +475,10 @@ app.get('/api/download-log', requireApiKey, (req, res) => {
             res.status(500).send('Download failed');
         }
     });
-});
+};
 
-// GET /api/download-csv は既存のまま CSV をダウンロード（保護）
-app.get('/api/download-csv', requireApiKey, (req, res) => {
-    if (!fs.existsSync(MASTER_CSV)) return res.status(404).send('No csv');
-    res.download(MASTER_CSV, 'purchase_log.csv', err => {
-        if (err) {
-            console.error('download csv error', err);
-            res.status(500).send('Download failed');
-        }
-    });
-});
+app.get('/api/download-csv', requireApiKey, handleDownloadCsv);
+app.get('/api/download-log', requireApiKey, handleDownloadCsv);
 
 // DELETE /api/clear-logs: テキストログは削除せず CSV のみを対象にする
 app.delete('/api/clear-logs', requireApiKey, (req, res) => {
@@ -633,49 +608,52 @@ server.on('error', (err) => {
 });
 
 function readServerCounter() {
+    const today = getCurrentDate();
     try {
-        if (!fs.existsSync(COUNTER_FILE)) return 9001;
+        if (!fs.existsSync(COUNTER_FILE)) return [today, 9001];
         const s = fs.readFileSync(COUNTER_FILE, 'utf8').trim();
         const lines = s.split(/\r?\n/).filter(Boolean);
-        if (!lines.length) return [getCurrentDate(), 9001];
+        if (!lines.length) return [today, 9001];
         for (let i = 0; i < lines.length; i++) {
-            if (lines[i].split(" ").includes(getCurrentDate())) {
-                const n = Number(lines[i].split(" ")[1]);
+            const parts = lines[i].split(/\s+/);
+            if (parts[0] === today) {
+                const n = Number(parts[1]);
                 if (!isNaN(n) && n >= 9001 && n <= 9999) {
-                    return [getCurrentDate(), n];
-                } else {
-                    return [getCurrentDate(), 9001];
+                    return [today, n];
                 }
+                return [today, 9001];
             }
         }
+        return [today, 9001];
     } catch (e) {
         console.error('readServerCounter error', e);
-        return [getCurrentDate(), 9001];
+        return [today, 9001];
     }
 }
 
 function writeServerCounter(counter) {
     try {
-        if (!fs.existsSync(COUNTER_FILE)) return;
-        const s = fs.readFileSync(COUNTER_FILE, 'utf8').trim();
-        const lines = s.split(/\r?\n/).filter(Boolean);
-        if (!lines.length) return;
+        const today = getCurrentDate();
+        let lines = [];
+        if (fs.existsSync(COUNTER_FILE)) {
+            const s = fs.readFileSync(COUNTER_FILE, 'utf8').trim();
+            lines = s.split(/\r?\n/).filter(Boolean);
+        }
+        let found = false;
         for (let i = 0; i < lines.length; i++) {
-            if (lines[i].split(" ").includes(getCurrentDate())) {
-                const n = Number(lines[i].split(" ")[1]);
-                if (!isNaN(n) && n >= 9001 && n <= 9999) {
-                    if (n >= counter) {
-                        lines[i] = getCurrentDate() + " " + String(n + 1);
-                    } else {
-                        lines[i] = getCurrentDate() + " " + String(counter);
-                    }
-                } else {
-                    return;
-                }
+            const parts = lines[i].split(/\s+/);
+            if (parts[0] === today) {
+                const currentN = Number(parts[1]) || 9000;
+                const newN = Math.max(currentN, counter);
+                lines[i] = `${today} ${newN}`;
+                found = true;
+                break;
             }
         }
-        const updatedContent = lines.join('\n');
-        fs.writeFileSync(COUNTER_FILE, updatedContent, 'utf8');
+        if (!found) {
+            lines.push(`${today} ${counter}`);
+        }
+        fs.writeFileSync(COUNTER_FILE, lines.join('\n') + '\n', 'utf8');
     } catch (e) {
         console.error('writeServerCounter error', e);
     }
@@ -683,19 +661,21 @@ function writeServerCounter(counter) {
 
 // サーバー側で取引番号を取得（9001〜9999、インクリメントして永続化）
 function getServerTxNo() {
-    const current = readServerCounter();
-    const txNo = current[1];
-    let next = current + 1;
+    const [, currentNo] = readServerCounter();
+    let next = currentNo + 1;
     if (next > 9999) next = 9001;
-    return txNo;
+    writeServerCounter(next);
+    return currentNo;
 }
 
 app.get('/api/get-TxNo', requireApiKey, (req, res) => {
-    console.log("send ServerTxNo from Server.")
-    return res.send(getServerTxNo()), err => {
+    try {
+        const txNo = getServerTxNo();
+        return res.type('text/plain').send(String(txNo));
+    } catch (err) {
         console.error('get-TxNo error', err);
-        res.status(500).send('Failed to get TxNo');
-    };
+        return res.status(500).send('Failed to get TxNo');
+    }
 });
 
 app.post('/api/update-counter', requireApiKey, (req, res) => {

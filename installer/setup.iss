@@ -43,7 +43,7 @@ Source: "..\dist\bin\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; 静的アセット（HTML, CSS, JS）
 Source: "..\dist\bin\*.html"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\bin\css\*"; DestDir: "{app}\css"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\dist\bin\script\*"; DestDir: "{app}\script"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\bin\js\*"; DestDir: "{app}\js"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; 初期商品CSV（すでに存在する場合は上書きせず、ユーザーの編集内容を保護）
 Source: "..\dist\bin\data\contents.csv"; DestDir: "{app}\data"; Flags: onlyifdoesntexist
 

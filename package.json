@@ -19,7 +19,7 @@
     "assets": [
       "*.html",
       "css/**/*",
-      "script/**/*",
+      "js/**/*",
       "data/contents.csv"
     ]
   },
