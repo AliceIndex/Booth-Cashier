@@ -37,6 +37,8 @@
   "homepage": "https://github.com/AliceIndex/Booth-Cashier#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "express": "^5.2.0",
+    "iconv-lite": "^0.7.0"
     "express": "^5.1.0",
     "iconv-lite": "^0.7.0",
     "qrcode": "^1.5.4"
