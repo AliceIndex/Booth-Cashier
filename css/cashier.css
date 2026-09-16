@@ -3,55 +3,99 @@ body {
     background: #f7e7ff;
     margin: 0;
     padding: 0;
-    min-height: 100dvh; /* 変更: 100vh -> 100dvh */
+    min-height: 100dvh;
 }
+
+header {
+    margin-top: 4.8dvh;
+}
+
+.back-link {
+    position: fixed;
+    top: 24px;
+    left: 32px;
+    text-decoration: none;
+    color: #fff;
+    background: #a000b8;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+    display: inline-block;
+}
+
+.back-link:hover {
+    background: #7a008a;
+}
+
 h1 {
-    margin-top: 4.8dvh; /* 変更: 48px -> dvh ベース */
+    margin: 0;
     color: #a000b8;
     text-align: center;
 }
+
 .cashier-flex {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    margin-top: 2.4dvh; /* 変更: px -> dvh */
-    gap: 4.8dvw; /* 変更: gap を dvw ベースに(以前 48px 相当) */
+    margin-top: 2.4dvh;
+    gap: 4.8dvw;
 }
-/* center-list の最小幅を dvw に */
-.center-list.left-list {
+
+.left-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4dvh;
+}
+
+.left-list.upper-list {
     background: #fff;
     border: 1px solid #a000b8;
     border-radius: 12px;
     padding: 32px 40px;
-    min-width: 28dvw; /* 変更: px -> dvw */
-    max-width: 40dvw; /* 変更: px -> dvw */
-    box-shadow: 0 2px 8px rgba(160,0,184,0.08);
+    min-width: 28dvw;
+    max-width: 40dvw;
+    box-shadow: 0 2px 8px rgba(160, 0, 184, 0.08);
     text-align: center;
 }
-/* cashier-panel の幅調整 */
+
+.left-list.lower-list {
+    background: #fff;
+    border: 1px solid #a000b8;
+    border-radius: 12px;
+    padding: 32px 40px;
+    min-width: 28dvw;
+    max-width: 40dvw;
+    box-shadow: 0 2px 8px rgba(160, 0, 184, 0.08);
+    text-align: center;
+}
+
 .cashier-panel {
     background: #fff;
     border: 1px solid #a000b8;
     border-radius: 12px;
     padding: 32px 32px 24px 32px;
-    min-width: 24dvw; /* 変更: px -> dvw */
-    max-width: 32dvw; /* 変更: px -> dvw */
-    box-shadow: 0 2px 8px rgba(160,0,184,0.08);
+    min-width: 24dvw;
+    max-width: 32dvw;
+    box-shadow: 0 2px 8px rgba(160, 0, 184, 0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 .input-block {
     margin-bottom: 16px;
     width: 100%;
     text-align: center;
 }
+
 .input-block label {
     font-size: 1.1rem;
     color: #a000b8;
     margin-bottom: 4px;
     display: block;
 }
+
 #received-amount {
     width: 90%;
     font-size: 1.3rem;
@@ -63,12 +107,14 @@ h1 {
     background: #f7e7ff;
     color: #a000b8;
 }
+
 .numpad {
     display: grid;
     grid-template-columns: repeat(3, 60px);
     gap: 10px;
     margin-bottom: 18px;
 }
+
 .numpad-btn {
     font-size: 1.3rem;
     padding: 16px 0;
@@ -79,12 +125,15 @@ h1 {
     cursor: pointer;
     transition: background 0.2s;
 }
+
 .numpad-btn:hover {
     background: #d1a6f7;
 }
+
 .numpad-btn.wide {
     grid-column: span 2;
 }
+
 .change-block {
     display: flex;
     align-items: center;
@@ -92,17 +141,19 @@ h1 {
     gap: 12px;
     margin-top: 16px;
     padding: 10px 16px;
-    background: linear-gradient(90deg, rgba(160,0,184,0.06), rgba(0,120,212,0.03));
-    border: 1px solid rgba(160,0,184,0.12);
+    background: linear-gradient(90deg, rgba(160, 0, 184, 0.06), rgba(0, 120, 212, 0.03));
+    border: 1px solid rgba(160, 0, 184, 0.12);
     border-radius: 10px;
-    box-shadow: 0 3px 10px rgba(160,0,184,0.06);
+    box-shadow: 0 3px 10px rgba(160, 0, 184, 0.06);
     color: #4a004f;
 }
+
 .change-block span:first-child {
     font-size: 1.05rem;
     color: #6d006a;
     font-weight: 700;
 }
+
 #change-amount {
     font-size: 2.0rem;
     font-weight: 800;
@@ -110,30 +161,12 @@ h1 {
     background: #fff;
     padding: 6px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(160,0,184,0.08);
+    border: 1px solid rgba(160, 0, 184, 0.08);
     min-width: 110px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(160,0,184,0.06);
+    box-shadow: 0 2px 8px rgba(160, 0, 184, 0.06);
 }
-.back-link {
-    margin-top: 32px;
-    text-decoration: none;
-    color: #fff;
-    background: #a000b8;
-    padding: 12px 32px;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    transition: background 0.2s;
-    display: inline-block;
-}
-.back-link:hover {
-    background: #7a008a;
-}
-.fixed-back {
-    position: fixed;
-    top: 24px;
-    left: 32px;
-}
+
 .calc-btn {
     width: 100%;
     margin: 10px 0 0 0;
@@ -146,9 +179,20 @@ h1 {
     cursor: pointer;
     transition: background 0.2s;
 }
+
 .calc-btn:hover {
     background: #7a008a;
 }
+
+.btn-server-save {
+    background: #0078d4;
+    margin-top: 12px;
+}
+
+.btn-server-save:hover {
+    background: #005fa3;
+}
+
 .result-message {
     margin-top: 12px;
     font-size: 1.1rem;
@@ -156,21 +200,21 @@ h1 {
     min-height: 1.5em;
     text-align: center;
 }
-/* 追加: テンキー横に現計ボタンを配置 */
+
 .numpad-row {
     display: flex;
     gap: 12px;
     align-items: flex-start;
     width: 100%;
 }
+
 .calc-side {
     display: flex;
     align-items: flex-start;
-    /* ボタンをテンキーの右に寄せる */
 }
+
 .calc-btn.tall {
     width: 110px;
-    /* テンキー（4行 x 60px + 3 gaps x 10px = 270px）に合わせた高さ */
     height: 270px;
     padding: 0;
     font-size: 1.1rem;
@@ -179,7 +223,68 @@ h1 {
     justify-content: center;
     border-radius: 8px;
 }
+
+/* 記録済み取引一覧スタイル */
+.tx-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.tx-col-no {
+    min-width: 80px;
+    font-weight: 700;
+}
+
+.tx-col-date {
+    min-width: 120px;
+}
+
+.tx-col-time {
+    min-width: 90px;
+}
+
+.tx-col-total {
+    margin-left: auto;
+    font-weight: 700;
+}
+
+.tx-entry {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 0.6rem;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    background: #fff;
+    margin-bottom: 0.6rem;
+}
+
+.muted {
+    color: #777;
+    font-size: 0.95rem;
+}
+
+.total {
+    margin-top: 16px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #a000b8;
+}
+
 @media (max-width:480px) {
-    #change-amount { font-size: 1.4rem; min-width: 80px; padding: 4px 8px; }
-    .change-block { padding: 8px 10px; gap: 8px; }
+    #change-amount {
+        font-size: 1.4rem;
+        min-width: 80px;
+        padding: 4px 8px;
+    }
+
+    .change-block {
+        padding: 8px 10px;
+        gap: 8px;
+    }
 }

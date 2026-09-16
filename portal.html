@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booth Cashier - サーバーポータル</title>
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>Booth Cashier サーバー</h1>
+        <div class="title-desc">メインPC 管理ポータル</div>
+      </div>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="status-text">サーバー稼働中 (PORT: 3000)</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- 左列: 外部端末（iPad / スマホ）連携 -->
+      <section class="card highlight">
+        <h2>📱 外部レジ端末（iPad / スマホ）の接続</h2>
+        <p class="card-desc">同一Wi-Fiに接続した端末のカメラでQRコードを読み取ると、すぐにレジ打ち画面が開きます。</p>
+
+        <div class="qr-container">
+          <div id="qr-loading" class="qr-loading">QRコード生成中...</div>
+          <img id="qr-image" class="qr-image" style="display: none;" alt="外部接続用QRコード">
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: stretch;">
+          <div class="url-box" id="client-url" style="flex: 1;">取得中...</div>
+          <button class="btn btn-copy" id="btn-copy-url" type="button" title="URLをクリップボードにコピー">コピー</button>
+        </div>
+      </section>
+
+      <!-- 右列: メインPC操作 & 管理 -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <section class="card">
+          <h2>🖥️ このPCで画面を開く</h2>
+          <p class="card-desc">メインPCのブラウザでレジ操作や売上管理を行う場合はこちらから開けます。</p>
+          <div class="shortcut-list">
+            <a href="index.html" target="_blank" class="shortcut-item">
+              <div class="shortcut-info">
+                <span class="shortcut-title">🛒 レジ・商品選択（トップ）</span>
+                <span class="shortcut-subtitle">商品を選択してカートに入れる画面</span>
+              </div>
+              <span class="shortcut-arrow">→</span>
+            </a>
+            <a href="cashier.html" target="_blank" class="shortcut-item">
+              <div class="shortcut-info">
+                <span class="shortcut-title">💰 会計・現計ページ</span>
+                <span class="shortcut-subtitle">お預かり・お釣り計算を行う画面</span>
+              </div>
+              <span class="shortcut-arrow">→</span>
+            </a>
+            <a href="admin.html" target="_blank" class="shortcut-item">
+              <div class="shortcut-info">
+                <span class="shortcut-title">📊 売上分析・管理者ページ</span>
+                <span class="shortcut-subtitle">ログ閲覧・集計・CSVダウンロード</span>
+              </div>
+              <span class="shortcut-arrow">→</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>📁 データ & 終了操作</h2>
+          <p class="card-desc">商品マスタCSVの編集や売上ログの確認、サーバーの終了を行えます。</p>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn btn-folder" id="btn-open-folder" type="button">
+              📁 データ・ログフォルダを開く
+            </button>
+            <button class="btn btn-danger" id="btn-shutdown" type="button">
+              🛑 サーバーを終了する
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- サーバー停止オーバーレイ -->
+  <div class="shutdown-overlay" id="shutdown-overlay">
+    <div class="shutdown-box">
+      <div class="shutdown-icon">🛑</div>
+      <h3>サーバーを終了しました</h3>
+      <p>Booth Cashier サーバーのプロセスが安全に停止しました。<br>このブラウザタブを閉じてください。</p>
+      <button class="btn btn-outline" onclick="window.close()" type="button" style="width: 100%;">タブを閉じる</button>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let serverInfo = null;
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    async function loadServerInfo() {
+      try {
+        const res = await fetch('/api/server-info');
+        if (!res.ok) throw new Error('API request failed');
+        serverInfo = await res.json();
+
+        // 稼働ポート表示
+        document.getElementById('status-text').textContent = `サーバー稼働中 (PORT: ${serverInfo.port})`;
+
+        // URL表示
+        const urlBox = document.getElementById('client-url');
+        urlBox.textContent = serverInfo.clientUrl;
+
+        // QRコード画像表示
+        const qrImg = document.getElementById('qr-image');
+        const qrLoading = document.getElementById('qr-loading');
+        qrImg.src = serverInfo.qrDataUrl;
+        qrImg.style.display = 'block';
+        qrLoading.style.display = 'none';
+      } catch (err) {
+        console.error('Failed to load server info', err);
+        document.getElementById('status-text').textContent = 'サーバー情報取得失敗';
+        document.getElementById('client-url').textContent = '取得できませんでした';
+      }
+    }
+
+    // URLコピー
+    document.getElementById('btn-copy-url').addEventListener('click', async () => {
+      if (!serverInfo || !serverInfo.clientUrl) return;
+      try {
+        await navigator.clipboard.writeText(serverInfo.clientUrl);
+        showToast('接続URLをコピーしました！');
+      } catch (e) {
+        const input = document.createElement('input');
+        input.value = serverInfo.clientUrl;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('接続URLをコピーしました！');
+      }
+    });
+
+    // データフォルダを開く
+    document.getElementById('btn-open-folder').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/open-data-folder', { method: 'POST' });
+        if (res.ok) {
+          showToast('データフォルダを開きました');
+        } else {
+          showToast('フォルダを開けませんでした');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('エラーが発生しました');
+      }
+    });
+
+    // サーバー終了
+    document.getElementById('btn-shutdown').addEventListener('click', async () => {
+      const ok = confirm('サーバーを終了しますか？\n\n外部端末（iPad・スマホ）からのレジ打ち接続も切断されます。');
+      if (!ok) return;
+
+      try {
+        await fetch('/api/shutdown', { method: 'POST' });
+      } catch (e) {
+        // サーバーが即停止するためエラーになる場合もあるが正常終了とみなす
+      }
+
+      // 停止画面を表示
+      const overlay = document.getElementById('shutdown-overlay');
+      overlay.style.display = 'flex';
+    });
+
+    document.addEventListener('DOMContentLoaded', loadServerInfo);
+  </script>
+</body>
+
+</html>

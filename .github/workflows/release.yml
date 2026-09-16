@@ -1,0 +1,74 @@
+name: Release Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows Installer (Setup.exe)
+        run: npm run build:installer
+
+      - name: Build Developer Executable (With Console)
+        run: npm run build:dev
+
+      - name: Package Portable & Dev ZIP Archives
+        shell: pwsh
+        run: |
+          # ポータブル版（インストール不要版）を ZIP に圧縮
+          Compress-Archive -Path "dist/bin/*" -DestinationPath "dist/Booth-Cashier-Portable.zip" -Force
+          # 開発者用（ターミナル表示あり）を ZIP に圧縮
+          Compress-Archive -Path "dist/dev/*" -DestinationPath "dist/Booth-Cashier-Dev.zip" -Force
+
+      - name: Determine Release Tag
+        id: vars
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like "refs/tags/v*") {
+            $tag = $env:GITHUB_REF -replace "refs/tags/", ""
+          } elseif ("${{ github.event.inputs.tag_name }}" -ne "") {
+            $tag = "${{ github.event.inputs.tag_name }}"
+          } else {
+            $packageJson = Get-Content "package.json" | ConvertFrom-Json
+            $tag = "v" + $packageJson.version
+          }
+          Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: Booth Cashier ${{ steps.vars.outputs.tag }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/installer/*.exe
+            dist/Booth-Cashier-Portable.zip
+            dist/Booth-Cashier-Dev.zip
+

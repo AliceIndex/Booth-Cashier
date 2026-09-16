@@ -1,39 +1,57 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>会計 | Booth Cashier</title>
     <link rel="stylesheet" href="css/cashier.css">
 </head>
+
 <body>
-    <a href="index.html" class="back-link fixed-back">戻る</a>
-    <h1>会計ページ</h1>
-    <div class="cashier-flex">
-        <div class="center-list left-list">
-            <h2>選択中の商品</h2>
-            <ul id="selected-list"></ul>
-            <div class="total">合計金額: <span id="total-price">￥0</span></div>
-        </div>
-        <div class="cashier-panel">
-            <div class="input-block">
-                <label for="received-amount">受取額</label>
-                <input type="text" id="received-amount" readonly value="">
-            </div>
-            <div class="numpad-row">
-                <div class="numpad" id="numpad">
-                    <!-- テンキーはJSで生成 -->
+    <header>
+        <a href="index.html" class="back-link">戻る</a>
+        <h1>会計ページ</h1>
+    </header>
+    <main>
+        <div class="cashier-flex">
+            <div class="left-list">
+                <div class="left-list upper-list">
+                    <h2>選択中の商品</h2>
+                    <ul id="selected-list"></ul>
+                    <div class="total">合計金額: <span id="total-price">￥0</span></div>
                 </div>
-                <div class="calc-side">
-                    <button id="calc-btn" class="calc-btn tall" type="button">現計</button>
+                <div class="left-list lower-list">
+                    <section id="saved-transactions">
+                        <h3>未送信取引記録</h3>
+                        <div class="saved-list muted">ロード中...</div>
+                    </section>
                 </div>
             </div>
-            <div class="change-block">
-                <span>お釣り: </span><span id="change-amount">￥0</span>
+            <div class="cashier-panel">
+                <div class="input-block">
+                    <label for="received-amount">受取額</label>
+                    <input type="text" id="received-amount" readonly value="">
+                </div>
+                <div class="numpad-row">
+                    <div class="numpad" id="numpad">
+                        <!-- テンキーはJSで生成 -->
+                    </div>
+                    <div class="calc-side">
+                        <button id="calc-btn" class="calc-btn tall" type="button">現計</button>
+                    </div>
+                </div>
+                <div class="change-block">
+                    <span>お釣り: </span><span id="change-amount">￥0</span>
+                </div>
+                <div id="result-message" class="result-message"></div>
+                <button id="btn-upload-server" class="calc-btn btn-server-save" type="button">購入履歴をサーバーに保存</button>
             </div>
-            <div id="result-message" class="result-message"></div>
         </div>
-    </div>
-    <script src="script/cashier.js"></script>
+        <script src="js/common.js"></script>
+        <script src="js/cart.js"></script>
+        <script src="js/cashier.js"></script>
+    </main>
 </body>
+
 </html>
