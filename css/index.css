@@ -12,7 +12,8 @@
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     min-height: 100dvh;
     width: 100dvw;
 }
@@ -33,11 +34,13 @@ body {
     background: linear-gradient(90deg, rgba(160, 0, 184, 0.06), rgba(0, 120, 212, 0.03));
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
+
 .site-header h1 {
     margin: 0;
     font-size: 1.6rem;
     color: var(--accent);
 }
+
 .site-header p {
     margin: 6px 0 0;
     color: var(--muted);
@@ -58,6 +61,7 @@ body {
     font-weight: 600;
     transition: opacity 0.2s;
 }
+
 .cashier-link:hover {
     opacity: 0.92;
 }
@@ -77,15 +81,18 @@ body {
     flex: 1;
     min-width: 280px;
 }
+
 .item-list-section h2 {
     margin: 0 0 12px;
     color: var(--accent);
 }
+
 .tile-container {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
+
 .tile {
     background: var(--card);
     border: 1px solid rgba(0, 0, 0, 0.06);
@@ -100,14 +107,17 @@ body {
     flex-direction: column;
     justify-content: space-between;
 }
+
 .tile:hover {
     transform: translateY(-4px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
 }
+
 .item-name {
     font-weight: 600;
     margin-bottom: 6px;
 }
+
 .item-price {
     color: var(--muted);
     font-size: 0.95rem;
@@ -124,20 +134,24 @@ body {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     height: fit-content;
 }
+
 .selected-list h2 {
     margin: 0 0 8px;
     color: var(--accent);
 }
+
 .selected-list h3 {
     margin: 10px 0 6px;
     font-size: 0.95rem;
     color: var(--muted);
 }
+
 .selected-list ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
+
 .selected-list li {
     display: flex;
     align-items: center;
@@ -146,9 +160,11 @@ body {
     border-radius: 8px;
     font-size: 0.98rem;
 }
-.selected-list li + li {
+
+.selected-list li+li {
     margin-top: 6px;
 }
+
 .cancel-btn {
     margin-right: 8px;
     margin-left: 0;
@@ -161,6 +177,7 @@ body {
     cursor: pointer;
     line-height: 1;
 }
+
 .cancel-btn:hover {
     background: #b52a26;
 }
@@ -170,7 +187,9 @@ body {
 }
 
 /* 操作ボタン群 */
-.calc-btn, .go-to-cashier, .button-link {
+.calc-btn,
+.go-to-cashier,
+.button-link {
     background: var(--accent-2);
     color: #fff;
     border: none;
@@ -180,7 +199,9 @@ body {
     text-decoration: none;
     display: inline-block;
 }
-.calc-btn:hover, .go-to-cashier:hover {
+
+.calc-btn:hover,
+.go-to-cashier:hover {
     opacity: 0.92;
 }
 
@@ -190,13 +211,16 @@ body {
         flex-direction: column;
         padding: 12px;
     }
+
     .tile {
         width: calc(50% - 6px);
     }
+
     .selected-list {
         width: 100%;
     }
 }
+
 @media (max-width: 480px) {
     .tile {
         width: 100%;

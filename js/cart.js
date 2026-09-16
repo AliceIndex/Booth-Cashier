@@ -123,3 +123,4 @@
 
     global.Cart = Cart;
 })(typeof window !== 'undefined' ? window : this);
+

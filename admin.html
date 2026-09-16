@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7,55 +8,74 @@
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
-<header>
-  <div>
-    <h1>売上分析（Admin）</h1>
-    <div class="muted">ログ/CSV をサーバーから読み込み、集計・絞り込み・ダウンロードできます</div>
-  </div>
-  <div class="actions">
-    <a href="cashier.html" class="go-to-cashier">会計へ</a>
-    <a href="index.html" class="go-to-cashier">トップ</a>
-  </div>
-</header>
+  <header>
+    <div>
+      <h1>売上分析（Admin）</h1>
+      <div class="muted">ログ/CSV をサーバーから読み込み、集計・絞り込み・ダウンロードできます</div>
+    </div>
+    <div class="actions">
+      <a href="cashier.html" class="go-to-cashier">会計へ</a>
+      <a href="index.html" class="go-to-cashier">トップ</a>
+    </div>
+  </header>
 
-<section class="controls" aria-label="操作">
-  <label>日付範囲:
-    <input type="date" id="from-date"> 〜 <input type="date" id="to-date">
-  </label>
-  <label>取引番号:
-    <input type="text" id="filter-tx" placeholder="例: 0001">
-  </label>
-  <button id="btn-load">CSV読み込み</button>
-  <button id="btn-refresh">テキストログ読み込み</button>
-  <button id="btn-download-csv">CSVダウンロード</button>
-  <button id="btn-download-txt">ログダウンロード</button>
-</section>
+  <section class="controls" aria-label="操作">
+    <label>日付範囲:
+      <input type="date" id="from-date"> 〜 <input type="date" id="to-date">
+    </label>
+    <label>取引番号:
+      <input type="text" id="filter-tx" placeholder="例: 0001">
+    </label>
+    <button id="btn-load">CSV読み込み</button>
+    <button id="btn-refresh">テキストログ読み込み</button>
+    <button id="btn-download-csv">CSVダウンロード</button>
+    <button id="btn-download-txt">ログダウンロード</button>
+  </section>
 
-<section class="summary" aria-label="サマリー">
-  <div class="card"><div class="muted">合計商品売上</div><div id="sum-items" class="summary-value">￥0</div></div>
-  <div class="card"><div class="muted">取引数</div><div id="count-tx" class="summary-value">0</div></div>
-  <div class="card"><div class="muted">商品数</div><div id="count-items" class="summary-value">0</div></div>
-</section>
+  <section class="summary" aria-label="サマリー">
+    <div class="card">
+      <div class="muted">合計商品売上</div>
+      <div id="sum-items" class="summary-value">￥0</div>
+    </div>
+    <div class="card">
+      <div class="muted">取引数</div>
+      <div id="count-tx" class="summary-value">0</div>
+    </div>
+    <div class="card">
+      <div class="muted">商品数</div>
+      <div id="count-items" class="summary-value">0</div>
+    </div>
+  </section>
 
-<section>
-  <table id="result-table" aria-describedby="table-desc">
-    <caption id="table-desc" class="muted">CSV の行（1行=1商品）</caption>
-    <thead>
-      <tr>
-        <th>取引番号</th><th>日時</th><th>種別</th><th>商品名</th><th>オプション</th><th>単価</th><th>合計</th><th>受取額</th><th>お釣り</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
+  <section>
+    <table id="result-table" aria-describedby="table-desc">
+      <caption id="table-desc" class="muted">CSV の行（1行=1商品）</caption>
+      <thead>
+        <tr>
+          <th>取引番号</th>
+          <th>日時</th>
+          <th>種別</th>
+          <th>商品名</th>
+          <th>オプション</th>
+          <th>単価</th>
+          <th>合計</th>
+          <th>受取額</th>
+          <th>お釣り</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-<section class="raw-log-section">
-  <h3>生ログ（テキスト）</h3>
-  <div id="raw-log">未読み込み</div>
-</section>
+  <section class="raw-log-section">
+    <h3>生ログ（テキスト）</h3>
+    <div id="raw-log">未読み込み</div>
+  </section>
 
-<script src="js/common.js"></script>
-<script src="js/admin.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
 </body>
+
 </html>

@@ -4,35 +4,42 @@ body {
   min-height: 100dvh;
   background: none;
 }
+
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+
 .header {
   gap: 1.2dvw;
 }
+
 h1 {
   margin: 0;
   font-size: 1.2rem;
 }
+
 .controls {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
 }
+
 .controls input[type="date"] {
   padding: 1.2dvh;
   border-radius: 0.8dvw;
   border: 1px solid #ccc;
 }
+
 .controls input[type="text"] {
   padding: 1.2dvh;
   border-radius: 0.8dvw;
   border: 1px solid #ccc;
 }
+
 .controls button {
   padding: 1.0dvh 1.2dvw;
   border-radius: 0.8dvw;
@@ -41,12 +48,14 @@ h1 {
   color: #fff;
   cursor: pointer;
 }
+
 .summary {
   display: flex;
   gap: 1.2dvw;
   margin: 1.2dvh 0;
   flex-wrap: wrap;
 }
+
 .card {
   background: #fff;
   padding: 1.2dvh 1.6dvw;
@@ -54,17 +63,21 @@ h1 {
   box-shadow: 0 0.2dvh 0.6dvh rgba(0, 0, 0, .06);
   min-width: 18dvw;
 }
+
 .summary-value {
   font-weight: 800;
   font-size: 1.25rem;
 }
+
 .actions {
   display: flex;
   gap: 1.0dvw;
 }
+
 .raw-log-section {
   margin-top: 12px;
 }
+
 #raw-log {
   white-space: pre-wrap;
   background: #111;
@@ -74,6 +87,7 @@ h1 {
   max-height: 30dvh;
   overflow: auto;
 }
+
 .muted {
   color: #666;
   font-size: 0.9rem;
@@ -88,7 +102,9 @@ table {
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 0.1dvh 0.4dvh rgba(0, 0, 0, 0.03);
 }
-th, td {
+
+th,
+td {
   padding: 1.0dvh 1.2dvw;
   border: 1px solid #e9e9e9;
   text-align: left;
@@ -96,6 +112,7 @@ th, td {
   vertical-align: middle;
   background-clip: padding-box;
 }
+
 th {
   background: #fafafa;
   position: sticky;
@@ -103,6 +120,7 @@ th {
   z-index: 2;
   font-weight: 700;
 }
+
 tbody tr:nth-child(even) {
   background: #fbfbfb;
 }
@@ -114,10 +132,12 @@ tbody tr:nth-child(even) {
     align-items: flex-start;
     gap: 2.4dvh;
   }
+
   .summary {
     flex-direction: column;
     gap: 1.2dvh;
   }
+
   .controls {
     flex-direction: column;
     align-items: flex-start;

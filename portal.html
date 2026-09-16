@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booth Cashier - サーバーポータル</title>
   <link rel="stylesheet" href="css/portal.css">
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -24,7 +26,7 @@
       <section class="card highlight">
         <h2>📱 外部レジ端末（iPad / スマホ）の接続</h2>
         <p class="card-desc">同一Wi-Fiに接続した端末のカメラでQRコードを読み取ると、すぐにレジ打ち画面が開きます。</p>
-        
+
         <div class="qr-container">
           <div id="qr-loading" class="qr-loading">QRコード生成中...</div>
           <img id="qr-image" class="qr-image" style="display: none;" alt="外部接続用QRコード">
@@ -184,4 +186,5 @@
     document.addEventListener('DOMContentLoaded', loadServerInfo);
   </script>
 </body>
+
 </html>

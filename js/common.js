@@ -89,3 +89,4 @@
 
     global.AppUtils = AppUtils;
 })(typeof window !== 'undefined' ? window : this);
+
