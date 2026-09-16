@@ -105,13 +105,13 @@ git push origin v1.0.0
 ```text
 Booth-Cashier/
 ├── .github/workflows/   # GitHub Actions (自動リリースワークフロー)
-├── css/                 # スタイルシート (index.css, cashier.css, admin.css)
+├── css/                 # スタイルシート (index.css, cashier.css, admin.css, portal.css)
 ├── data/                # 商品マスタ (contents.csv)
 ├── dist/                # ビルド出力ディレクトリ (installer, bin, dev)
 ├── installer/           # Inno Setup 設定スクリプト (setup.iss)
+├── js/                  # クライアント側スクリプト (common.js, cart.js, contents.js, cashier.js, admin.js)
 ├── log/                 # 売上履歴ログ (purchase_log.csv, transactions/)
-├── script/              # クライアント側スクリプト (contents.js, cashier.js, admin.js)
-├── scripts/             # ビルド用スクリプト (build-installer.js, patch-subsystem.js 等)
+├── scripts/             # ビルド・保守用スクリプト (build-common.js, build-installer.js 等)
 ├── admin.html           # 売上分析・管理画面
 ├── cashier.html         # 会計・現計ページ
 ├── index.html           # 商品選択・レジトップ画面
