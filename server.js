@@ -35,6 +35,17 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));      // JSON 受信
 app.use(express.text({ type: '*/*', limit: '10mb' })); // プレーンテキスト受信
 
+// 管理画面へのアクセス制限ミドルウェア
+app.use('/admin.html', (req, res, next) => {
+    const clientIp = req.ip || (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress);
+    // 127.0.0.1 または ::1 (IPv6) からのアクセスのみ許可
+    if (clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1') {
+        next();
+    } else {
+        res.status(403).send('Forbidden: 管理画面はサーバーPCからのみアクセス可能です。');
+    }
+});
+
 // 静的ファイル配信（内蔵アセット + 外部フォルダ）
 app.use(express.static(STATIC_ROOT));
 if (DATA_ROOT !== STATIC_ROOT) {
